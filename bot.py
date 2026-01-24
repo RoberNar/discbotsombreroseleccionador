@@ -6,7 +6,7 @@ import os
 # ========= CONFIG =========
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-CANAL_GORRO_ID = os.getenv("CHANNEL_ID")
+CANAL_GORRO_ID = int(os.getenv("CHANNEL_ID"))
 # SOLO este canal puede usar el gorro
 
 CORTES = {
