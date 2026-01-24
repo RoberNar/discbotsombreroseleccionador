@@ -117,34 +117,34 @@ def contar_miembros_por_corte(guild: discord.Guild):
         conteo[key] = len(rol.members) if rol else 0
     return conteo
 
-def log_balance_cortes(guild: discord.Guild, motivo=""):
-    if not DEBUG_BALANCE:
-        return
-
-    conteo = contar_miembros_por_corte(guild)
-    max_miembros = max(conteo.values(), default=0)
-
-    cortes = []
-    pesos = []
-
-    print("\n📊 ===== BALANCE DE CORTES =====")
-    if motivo:
-        print(f"📝 Motivo: {motivo}")
-
-    for corte, cantidad in conteo.items():
-        peso = (max_miembros - cantidad) + 1
-        cortes.append(corte)
-        pesos.append(peso)
-        print(f"• {corte.upper():10} | miembros: {cantidad:2} | peso: {peso}")
-
-    total = sum(pesos)
-
-    print("📈 ===== PROBABILIDADES =====")
-    for corte, peso in zip(cortes, pesos):
-        porcentaje = (peso / total) * 100 if total > 0 else 0
-        print(f"→ {corte.upper():10}: {porcentaje:6.2f}%")
-
-    print("================================\n")
+#def log_balance_cortes(guild: discord.Guild, motivo=""):
+#    if not DEBUG_BALANCE:
+#        return
+#
+#    conteo = contar_miembros_por_corte(guild)
+#    max_miembros = max(conteo.values(), default=0)
+#
+#    cortes = []
+#    pesos = []
+#
+#    print("\n📊 ===== BALANCE DE CORTES =====")
+#    if motivo:
+#        print(f"📝 Motivo: {motivo}")
+#
+#    for corte, cantidad in conteo.items():
+#        peso = (max_miembros - cantidad) + 1
+#        cortes.append(corte)
+#        pesos.append(peso)
+#        print(f"• {corte.upper():10} | miembros: {cantidad:2} | peso: {peso}")
+#
+#    total = sum(pesos)
+#
+#    print("📈 ===== PROBABILIDADES =====")
+#    for corte, peso in zip(cortes, pesos):
+#        porcentaje = (peso / total) * 100 if total > 0 else 0
+#        print(f"→ {corte.upper():10}: {porcentaje:6.2f}%")
+#
+#    print("================================\n")
 
 def elegir_corte_balanceada(guild: discord.Guild):
     conteo = contar_miembros_por_corte(guild)
