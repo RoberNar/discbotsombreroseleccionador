@@ -154,7 +154,7 @@ def elegir_corte_balanceada(guild: discord.Guild):
     pesos = []
 
     for corte, cantidad in conteo.items():
-        peso = (max_miembros - cantidad) + 1
+        peso = max(1, (max_miembros - cantidad) ** 2)
         cortes.append(corte)
         pesos.append(peso)
 
@@ -234,7 +234,7 @@ async def on_ready():
         members = [m async for m in guild.fetch_members(limit=None)]
         print(f"👥 Miembros cargados: {len(members)}")
 
-        log_balance_cortes(guild, motivo="Inicio del bot")
+        #log_balance_cortes(guild, motivo="Inicio del bot")
 
     canal = bot.get_channel(CANAL_GORRO_ID)
     if canal is None:
