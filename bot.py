@@ -6,6 +6,7 @@ import os
 # ========= CONFIG =========
 TOKEN = os.getenv("DISCORD_TOKEN")
 CANAL_GORRO_ID = int(os.getenv("CHANNEL_ID"))
+CANAL_ANUNCIO_ID = int(os.getenv("ANNOUNCE_CHANNEL_ID"))
 
 DEBUG_BALANCE = True
 
@@ -85,7 +86,7 @@ def log_balance_cortes(guild, corte_asignado=None, motivo=""):
     conteo = contar_miembros_por_corte(guild)
 
     if corte_asignado:
-        conteo[corte_asignado] += 1  # ajuste manual
+        conteo[corte_asignado] += 1
 
     max_miembros = max(conteo.values(), default=0)
 
@@ -161,7 +162,6 @@ class GorroButton(discord.ui.Button):
 
         corte = elegir_corte_balanceada(interaction.guild)
         rol = interaction.guild.get_role(CORTES[corte]["role_id"])
-
         await member.add_roles(rol)
 
         log_balance_cortes(
@@ -169,6 +169,15 @@ class GorroButton(discord.ui.Button):
             corte_asignado=corte,
             motivo=f"{member.display_name} asignado a {corte}"
         )
+
+        # 🎉 MENSAJE PÚBLICO
+        canal_anuncio = interaction.guild.get_channel(CANAL_ANUNCIO_ID)
+        if canal_anuncio:
+            await canal_anuncio.send(
+                f"🎩✨ **¡El Sombrero Seleccionador ha hablado!** ✨🎩\n\n"
+                f"👤 {member.mention} ha sido elegido para la **{CORTES[corte]['titulo']}**\n"
+                f"🌟 ¡Que el destino guíe tu camino!"
+            )
 
         embed, archivo = crear_embed_corte(corte)
 
