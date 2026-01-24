@@ -5,9 +5,9 @@ import os
 
 # ========= CONFIG =========
 TOKEN = os.getenv("DISCORD_TOKEN")
-
 CANAL_GORRO_ID = int(os.getenv("CHANNEL_ID"))
-# SOLO este canal puede usar el gorro
+
+DEBUG_BALANCE = True
 
 CORTES = {
     "amanecer": {
@@ -20,47 +20,40 @@ CORTES = {
         ),
         "imagen": "amanecer.png"
     },
-
     "dia": {
         "role_id": 1459983708466577736,
         "titulo": "☀️ Corte del Día",
         "descripcion": (
             "Construcciones claras y cálidas en cuarzo, amarillos y dorados.\n\n"
-            "Arquitectura limpia y abierta, con sensación de luz constante y rayos de sol.\n\n"
-            "Estética luminosa, sin vegetación ni agua protagonista."
+            "Arquitectura limpia y abierta, con sensación de luz constante.\n\n"
+            "Estética luminosa."
         ),
         "imagen": "dia.png"
     },
-
     "verano": {
         "role_id": 1459983874447905066,
         "titulo": "🔥 Corte del Verano",
         "descripcion": (
-            "Estética costera con arena clara, arenisca y tonos azul agua desaturados.\n\n"
-            "Pueblo construido en la costa, con el mar al fondo, no atravesando la ciudad.\n\n"
-            "Ambiente relajado, luminoso y marino."
+            "Estética costera con arena clara y tonos azul agua.\n\n"
+            "Ambiente relajado y marino."
         ),
         "imagen": "verano.png"
     },
-
     "otono": {
         "role_id": 1459983917175017642,
         "titulo": "🍂 Corte del Otoño",
         "descripcion": (
-            "Bosque denso con tonos naranjas, rojos y marrones.\n\n"
-            "Casas de piedra, madera oscura y detalles rústicos, integradas entre los árboles.\n\n"
-            "Sin lagos ni ríos, sensación cálida y salvaje."
+            "Bosque denso con tonos naranjas y rojos.\n\n"
+            "Sensación cálida y salvaje."
         ),
         "imagen": "otono.png"
     },
-
     "invierno": {
         "role_id": 1459983780797481020,
         "titulo": "❄️ Corte del Invierno",
         "descripcion": (
-            "Paisaje cubierto de nieve y hielo, con tonos blancos, grises y azules.\n\n"
-            "Construcciones sólidas de piedra y cuarzo, sin vegetación ni agua visible.\n\n"
-            "Ambiente frío, limpio y fortificado."
+            "Paisaje cubierto de nieve y hielo.\n\n"
+            "Ambiente frío y fortificado."
         ),
         "imagen": "invierno.png"
     },
@@ -68,29 +61,28 @@ CORTES = {
         "role_id": 1459983943146410176,
         "titulo": "🌸 Corte de la Primavera",
         "descripcion": (
-            "Colores verdes vivos, rosados y blancos.\n\n"
-            "Construcciones rodeadas de vegetación, flores y madera clara.\n\n"
-            "Ambiente natural, florecido y luminoso, con sensación de renovación."
+            "Vegetación viva y flores.\n\n"
+            "Sensación de renovación."
         ),
         "imagen": "primavera.png"
-    }    
-    #,"noche": {
-    #    "role_id": 1459983478480310435,
-    #    "titulo": "🌙 Corte de la Noche",
-    #    "descripcion": (
-    #        "Arquitectura elegante con tonos morado, azul oscuro y negro, combinados con blanco luminoso.\n\n"
-    #        "Uso de cuarzo, madera oscura, pizarra y luces suaves que simulan estrellas.\n\n"
-    #        "Ambiente nocturno, refinado y bien iluminado."
-    #    ),
-    #    "imagen": "noche.png"
-    #},
+    },
+    "noche": {
+        "role_id": 1459983478480310435,
+        "titulo": "🌙 Corte de la Noche",
+        "descripcion": (
+            "Arquitectura elegante con tonos morado, azul oscuro y negro, combinados con blanco luminoso.\n\n"
+            "Uso de cuarzo, madera oscura, pizarra y luces suaves que simulan estrellas.\n\n"
+            "Ambiente nocturno, refinado y bien iluminado."
+        ),
+        "imagen": "noche.png"
+    }
 }
 
 # ==========================
 
 intents = discord.Intents.default()
 intents.message_content = True
-intents.members = True  # solo si usas roles / miembros
+intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -112,23 +104,67 @@ def crear_embed_corte(key):
         color=0x6a4c93
     )
 
-    nombre_imagen = data["imagen"]
-
-    embed.set_image(url=f"attachment://{nombre_imagen}")
+    embed.set_image(url=f"attachment://{data['imagen']}")
     embed.set_footer(text="El destino ha sido decidido.")
 
-    archivo = discord.File(nombre_imagen, filename=nombre_imagen)
+    archivo = discord.File(data["imagen"], filename=data["imagen"])
     return embed, archivo
 
+def contar_miembros_por_corte(guild: discord.Guild):
+    conteo = {}
+    for key, data in CORTES.items():
+        rol = guild.get_role(data["role_id"])
+        conteo[key] = len(rol.members) if rol else 0
+    return conteo
 
-# -------- BOTÓN DISMISS --------
+def log_balance_cortes(guild: discord.Guild, motivo=""):
+    if not DEBUG_BALANCE:
+        return
+
+    conteo = contar_miembros_por_corte(guild)
+    max_miembros = max(conteo.values(), default=0)
+
+    cortes = []
+    pesos = []
+
+    print("\n📊 ===== BALANCE DE CORTES =====")
+    if motivo:
+        print(f"📝 Motivo: {motivo}")
+
+    for corte, cantidad in conteo.items():
+        peso = (max_miembros - cantidad) + 1
+        cortes.append(corte)
+        pesos.append(peso)
+        print(f"• {corte.upper():10} | miembros: {cantidad:2} | peso: {peso}")
+
+    total = sum(pesos)
+
+    print("📈 ===== PROBABILIDADES =====")
+    for corte, peso in zip(cortes, pesos):
+        porcentaje = (peso / total) * 100 if total > 0 else 0
+        print(f"→ {corte.upper():10}: {porcentaje:6.2f}%")
+
+    print("================================\n")
+
+def elegir_corte_balanceada(guild: discord.Guild):
+    conteo = contar_miembros_por_corte(guild)
+    max_miembros = max(conteo.values(), default=0)
+
+    cortes = []
+    pesos = []
+
+    for corte, cantidad in conteo.items():
+        peso = (max_miembros - cantidad) + 1
+        cortes.append(corte)
+        pesos.append(peso)
+
+    return random.choices(cortes, weights=pesos, k=1)[0]
+
+# -------- UI --------
 
 class DismissButton(discord.ui.Button):
     def __init__(self):
-        super().__init__(
-            label="❌ Dismiss",
-            style=discord.ButtonStyle.secondary
-        )
+        super().__init__(label="❌ Dismiss", style=discord.ButtonStyle.secondary)
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
@@ -139,8 +175,6 @@ class DismissView(discord.ui.View):
         super().__init__(timeout=60)
         self.add_item(DismissButton())
 
-# -------- BOTÓN GORRO --------
-
 class GorroButton(discord.ui.Button):
     def __init__(self):
         super().__init__(
@@ -149,7 +183,6 @@ class GorroButton(discord.ui.Button):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        # 🔒 SOLO UN CANAL
         if interaction.channel.id != CANAL_GORRO_ID:
             await interaction.response.send_message(
                 "❌ Este ritual solo puede realizarse en el canal designado.",
@@ -161,15 +194,20 @@ class GorroButton(discord.ui.Button):
 
         if tiene_corte(member):
             await interaction.response.send_message(
-                "❌ Ya perteneces a una corte. El destino no se repite.",
+                "❌ Ya perteneces a una corte.",
                 ephemeral=True
             )
             return
 
-        corte = random.choice(list(CORTES.keys()))
+        corte = elegir_corte_balanceada(interaction.guild)
         rol = interaction.guild.get_role(CORTES[corte]["role_id"])
 
         await member.add_roles(rol)
+
+        log_balance_cortes(
+            interaction.guild,
+            motivo=f"{member.display_name} asignado a {corte}"
+        )
 
         embed, archivo = crear_embed_corte(corte)
 
@@ -185,29 +223,20 @@ class GorroView(discord.ui.View):
         super().__init__(timeout=None)
         self.add_item(GorroButton())
 
-
 # -------- READY --------
 
 @bot.event
 async def on_ready():
     print(f"✅ Bot conectado como {bot.user}")
 
+    if bot.guilds:
+        log_balance_cortes(bot.guilds[0], motivo="Inicio del bot")
+
     canal = bot.get_channel(CANAL_GORRO_ID)
     if canal is None:
-        print("❌ No se pudo encontrar el canal del gorro")
+        print("❌ No se encontró el canal")
         return
 
-    # 🔥 BORRAR MENSAJES ANTERIORES DEL BOT
-    async for message in canal.history(limit=50):
-        if message.author == bot.user:
-            # Opcional: solo borrar los que tengan el título correcto
-            if message.embeds:
-                embed = message.embeds[0]
-                if embed.title and "Gorro Seleccionador" in embed.title:
-                    await message.delete()
-                    print("🗑️ Mensaje anterior del gorro eliminado")
-
-    # 🆕 CREAR MENSAJE NUEVO
     embed = discord.Embed(
         title="🎩 El Sombrero Seleccionador",
         description=(
@@ -220,11 +249,7 @@ async def on_ready():
     archivo = discord.File("gorro.png", filename="gorro.png")
     embed.set_image(url="attachment://gorro.png")
 
-    await canal.send(
-        embed=embed,
-        file=archivo,
-        view=GorroView()
-    )
-    print("✨ Mensaje del gorro creado automáticamente")
+    await canal.send(embed=embed, file=archivo, view=GorroView())
+    print("✨ Mensaje del gorro creado")
 
 bot.run(TOKEN)
