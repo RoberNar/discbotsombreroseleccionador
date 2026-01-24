@@ -6,7 +6,8 @@ import os
 # ========= CONFIG =========
 TOKEN = os.getenv("DISCORD_TOKEN")
 
-CANAL_GORRO_ID = 1464417274994626621  # SOLO este canal puede usar el gorro
+CANAL_GORRO_ID = os.getenv("CHANNEL_ID")
+# SOLO este canal puede usar el gorro
 
 CORTES = {
     "amanecer": {
