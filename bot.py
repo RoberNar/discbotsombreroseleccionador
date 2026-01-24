@@ -4,6 +4,7 @@ import random
 import os
 
 # ========= CONFIG =========
+print("ANNOUNCE_CHANNEL_ID =", repr(os.getenv("ANNOUNCE_CHANNEL_ID")))
 TOKEN = os.getenv("DISCORD_TOKEN")
 CANAL_GORRO_ID = int(os.getenv("CHANNEL_ID"))
 CANAL_ANUNCIO_ID = int(os.getenv("ANNOUNCE_CHANNEL_ID"))
