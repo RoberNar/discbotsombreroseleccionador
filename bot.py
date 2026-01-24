@@ -229,8 +229,9 @@ class GorroView(discord.ui.View):
 async def on_ready():
     print(f"✅ Bot conectado como {bot.user}")
 
-    if bot.guilds:
-        log_balance_cortes(bot.guilds[0], motivo="Inicio del bot")
+    for guild in bot.guilds:
+        await guild.chunk()  # ⬅️ CARGA TODOS LOS MIEMBROS EN CACHE
+        log_balance_cortes(guild, motivo="Inicio del bot")
 
     canal = bot.get_channel(CANAL_GORRO_ID)
     if canal is None:
