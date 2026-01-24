@@ -230,7 +230,10 @@ async def on_ready():
     print(f"✅ Bot conectado como {bot.user}")
 
     for guild in bot.guilds:
-        await guild.chunk()  # ⬅️ CARGA TODOS LOS MIEMBROS EN CACHE
+        # ⬇️ DESCARGA REAL DE MIEMBROS (NO SOLO CACHE PASIVO)
+        members = [m async for m in guild.fetch_members(limit=None)]
+        print(f"👥 Miembros cargados: {len(members)}")
+
         log_balance_cortes(guild, motivo="Inicio del bot")
 
     canal = bot.get_channel(CANAL_GORRO_ID)
