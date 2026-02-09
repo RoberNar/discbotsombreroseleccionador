@@ -3,7 +3,8 @@ from discord.ext import commands
 import random
 import os
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+import traceback
+from google.oauth2.service_account import Credentials
 from datetime import datetime
 
 # ========= CONFIG =========
@@ -84,7 +85,10 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # -------- GOOGLE SHEETS --------
 
 def get_gspread_client():
-    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
 
     # 1. Intentar cargar desde variable de entorno (Railway / Prod)
     env_creds = os.getenv("GOOGLE_CREDENTIALS_JSON")
@@ -92,25 +96,30 @@ def get_gspread_client():
         try:
             import json
             creds_dict = json.loads(env_creds)
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+            creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
             return gspread.authorize(creds)
         except Exception as e:
              print(f"❌ Error cargando credenciales desde ENV: {e}")
+             traceback.print_exc()
 
     # 2. Intentar cargar desde archivo local (Dev)
     if os.path.exists(CREDENTIALS_FILE):
-        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
-        return gspread.authorize(creds)
+        try:
+            creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=scope)
+            return gspread.authorize(creds)
+        except Exception as e:
+            print(f"❌ Error cargando archivo local de credenciales: {e}")
+            traceback.print_exc()
     
     print("⚠️ CREDENCIALES NO ENCONTRADAS (Ni en ENV ni en archivo). Saltando integración Sheets.")
     return None
 
 def add_member_to_sheet(discord_name, minecraft_name, corte, roles):
-    client = get_gspread_client()
-    if not client:
-        return
-
     try:
+        client = get_gspread_client()
+        if not client:
+            return
+
         sheet = client.open(SHEET_NAME).sheet1
         # Obtener todos los registros de la columna "USUARIO" (columna C, índice 3)
         # Ojo: gspread usa indices base 1.
@@ -149,9 +158,11 @@ def add_member_to_sheet(discord_name, minecraft_name, corte, roles):
 
         print(f"📝 Insertando en fila {insert_index}: {row_data}")
         sheet.insert_row(row_data, insert_index)
+        print("✅ Google Sheet actualizado correctamente.")
 
     except Exception as e:
         print(f"❌ Error actualizando Google Sheet: {e}")
+        traceback.print_exc()
 
 # -------- UTIL --------
 
