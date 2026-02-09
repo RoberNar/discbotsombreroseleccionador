@@ -14,7 +14,7 @@ CANAL_GORRO_ID = int(os.getenv("CHANNEL_ID"))
 CANAL_ANUNCIO_ID = int(os.getenv("ANNOUNCE_CHANNEL_ID"))
 
 # Google Sheets Config
-SHEET_NAME = "Cortes Prythian" 
+SHEET_ID = "1BPZZ0AHBxeBCfKxGUjLS2VzSUCz7QiWCOYYOZwfUcRM"
 CREDENTIALS_FILE = "credentials.json"
 
 DEBUG_BALANCE = True
@@ -120,7 +120,9 @@ def add_member_to_sheet(discord_name, minecraft_name, corte, roles):
         if not client:
             return
 
-        sheet = client.open(SHEET_NAME).sheet1
+        # Usar open_by_key es mucho más seguro y robusto que por nombre
+        sheet = client.open_by_key(SHEET_ID).sheet1
+        
         # Obtener todos los registros de la columna "USUARIO" (columna C, índice 3)
         # Ojo: gspread usa indices base 1.
         col_values = sheet.col_values(3) 
