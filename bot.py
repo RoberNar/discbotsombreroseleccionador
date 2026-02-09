@@ -111,18 +111,54 @@ def log_balance_cortes(guild, corte_asignado=None, motivo=""):
     print("================================\n")
 
 def elegir_corte_balanceada(guild: discord.Guild):
+    # Forzar recuento actualizado
     conteo = contar_miembros_por_corte(guild)
     max_miembros = max(conteo.values(), default=0)
-
+    
     cortes = []
     pesos = []
 
+    print(f"\n🎲 Calculando probabilidades para '{guild.name}' ({guild.member_count} miembros detectados)")
+    
+    # Identificar cortes con max miembros
+    cortes_maximos = [c for c, n in conteo.items() if n == max_miembros]
+    num_cortes = len(conteo)
+    num_maximos = len(cortes_maximos)
+
+    # Lógica de exclusión:
+    # Si hay entre 1 y 3 cortes con el máximo, y NO son todos los cortes
+    excluir_maximos = (1 <= num_maximos <= 3) and (num_maximos < num_cortes)
+
+    if excluir_maximos:
+        print(f"🚫 Excluyendo {num_maximos} corte(s) por tener máximo de miembros ({max_miembros}): {', '.join(cortes_maximos)}")
+    else:
+        print(f"⚠️ No se excluye nadie (Máximos empatados: {num_maximos}/{num_cortes})")
+
+    # Recalcular max para los restantes si hubo exclusión (opcional, pero mantiene la fórmula consistente)
+    # Si excluimos los max, el "nuevo max" es el siguiente más alto.
+    # Pero la fórmula (max - actual + 1)^2 funciona igual si usamos el max global.
+    # Usaremos el MAX GLOBAL para mantener la escala de pesos.
+
     for corte, cantidad in conteo.items():
+        if excluir_maximos and corte in cortes_maximos:
+            print(f"   ► {corte:10} | Cant: {cantidad:3} | Peso:    0 (EXCLUIDO)")
+            continue
+
+        # Fórmula: (max - actual + 1)^2
         peso = max(1, (max_miembros - cantidad + 1) ** 2)
         cortes.append(corte)
         pesos.append(peso)
+        print(f"   ► {corte:10} | Cant: {cantidad:3} | Peso: {peso:4}")
 
-    return random.choices(cortes, weights=pesos, k=1)[0]
+    if not cortes:
+        # Fallback de emergencia si algo falla y la lista queda vacía
+        print("⚠️ ALERTA: Lista de cortes vacía tras filtrado. Usando modo fallback (todos igual probabilidad).")
+        cortes = list(conteo.keys())
+        pesos = [1] * len(cortes)
+
+    eleccion = random.choices(cortes, weights=pesos, k=1)[0]
+    print(f"✨ Resultado: {eleccion}\n")
+    return eleccion
 
 def crear_embed_corte(key):
     data = CORTES[key]
@@ -161,6 +197,10 @@ class GorroButton(discord.ui.Button):
             )
             return
 
+        # Asegurar caché de miembros para conteo preciso
+        if not interaction.guild.chunked:
+            await interaction.guild.chunk(cache=True)
+            
         corte = elegir_corte_balanceada(interaction.guild)
         rol = interaction.guild.get_role(CORTES[corte]["role_id"])
         await member.add_roles(rol)
