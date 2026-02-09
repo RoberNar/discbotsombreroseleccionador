@@ -84,13 +84,26 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 # -------- GOOGLE SHEETS --------
 
 def get_gspread_client():
-    if not os.path.exists(CREDENTIALS_FILE):
-        print("⚠️ ARCHIVO DE CREDENCIALES NO ENCONTRADO. Saltando integración Sheets.")
-        return None
-    
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
-    return gspread.authorize(creds)
+
+    # 1. Intentar cargar desde variable de entorno (Railway / Prod)
+    env_creds = os.getenv("GOOGLE_CREDENTIALS_JSON")
+    if env_creds:
+        try:
+            import json
+            creds_dict = json.loads(env_creds)
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+            return gspread.authorize(creds)
+        except Exception as e:
+             print(f"❌ Error cargando credenciales desde ENV: {e}")
+
+    # 2. Intentar cargar desde archivo local (Dev)
+    if os.path.exists(CREDENTIALS_FILE):
+        creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
+        return gspread.authorize(creds)
+    
+    print("⚠️ CREDENCIALES NO ENCONTRADAS (Ni en ENV ni en archivo). Saltando integración Sheets.")
+    return None
 
 def add_member_to_sheet(discord_name, minecraft_name, corte, roles):
     client = get_gspread_client()
