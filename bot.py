@@ -142,20 +142,21 @@ def add_member_to_sheet(discord_name, minecraft_name, corte, roles):
             insert_index = len(col_values) + 1
 
         # Preparar fila
-        # Cols: [Permisos?, DISCORD, USUARIO, CORTE, RANGO, ROL, ROL2, ROL3, HAT, ...]
-        # A=1, B=2, C=3, D=4, E=5, F=6, G=7, H=8, I=9
+        # Cols: [VACIO, Permisos?, DISCORD, USUARIO, CORTE, RANGO, ROL, ROL2, ROL3, HAT, ...]
+        # A=1, B=2, C=3, D=4, E=5, F=6, G=7, H=8, I=9, J=10
         
         row_data = [
-            "FALSE",          # A: Permisos? (Check box unchecked)
-            discord_name,     # B: DISCORD
-            minecraft_name,   # C: USUARIO
-            corte.upper(),    # D: CORTE
-            "MIEMBRO",        # E: RANGO
-            roles[0] if len(roles) > 0 else "", # F: ROL
-            roles[1] if len(roles) > 1 else "", # G: ROL2 (oculto/extra)
-            roles[2] if len(roles) > 2 else "", # H: ROL3 (oculto/extra)
-            "",               # I: HAT
-            ""                # J: Extra?
+            "",               # A: Columna vacía/marginal
+            "FALSE",          # B: Permisos? (Check box unchecked)
+            discord_name,     # C: DISCORD
+            minecraft_name,   # D: USUARIO
+            corte.upper(),    # E: CORTE
+            "MIEMBRO",        # F: RANGO
+            roles[0] if len(roles) > 0 else "", # G: ROL
+            roles[1] if len(roles) > 1 else "", # H: ROL2 (oculto/extra)
+            roles[2] if len(roles) > 2 else "", # I: ROL3 (oculto/extra)
+            "",               # J: HAT
+            ""                # K: Extra?
         ]
 
         print(f"📝 Insertando en fila {insert_index}: {row_data}")
